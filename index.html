@@ -1,0 +1,126 @@
+<!doctype html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, 
+    user-scalable=no, initial-scale=1, maximum-scale=1, user-scalable=0" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+<style>
+	<!-- Custom Font -->
+	@font-face
+	{
+		font-family: gatb;
+		src: url("gatb.ttf");
+	}
+	
+	@font-face
+	{
+		font-family: gothic;
+		src: url("gothic.ttf");
+	}
+	
+	@font-face
+	{
+		font-family: gothic2;
+		src: url("UnZialish.ttf");
+	}
+	
+	@font-face
+	{
+		font-family: pixellife;
+		src: url("pixellife.ttf");
+	}
+	
+	body
+	{ 
+		margin: 0; 
+		padding: 0; 
+	}
+	
+	canvas
+	{
+		margin: 0;
+		display: block;
+	}
+</style>
+
+<title>LanDefense</title>
+
+<!-- The Canvas -->
+<canvas></canvas>
+
+<!-- Sounds -->
+
+<!-- Scripts -->
+<script src="./src/requestAnimationFramePolyfill.js"></script>
+
+<!-- Gameplay Data -->
+<script src="./src/Config.js"></script>
+<script src="./src/Waves.js"></script>
+
+<!-- Math Utilities -->
+<script src="./src/Vector2.js"></script>
+
+<!-- Entity Factory -->
+<script src="./src/EntityFactory.js"></script>
+
+<!-- Keyboard Keys -->
+<script src="./src/KeyboardKeys.js"></script>
+
+<!-- Assets -->
+<script src="./src/Assets.js"></script>
+
+<!-- Assets Manager -->
+<script src="./src/AssetsManager.js"></script>
+
+<!-- Map Metadata -->
+<script src="./src/Map.js"></script>
+
+<!-- Map Builder -->
+<script src="./src/MapBuilder.js"></script>
+
+<!-- Entity Component System Manager -->
+<script src="./src/ECSManager.js"></script>
+
+<!-- Entity -->
+<script src="./src/Entity.js"></script>
+
+<!-- Components -->
+<script src="./src/Components.js"></script>
+
+<!-- Systems -->
+<script src="./src/MainMenuSystem.js"></script>
+<script src="./src/PlayerSelectionSystem.js"></script>
+<script src="./src/GameStateSystem.js"></script>
+<script src="./src/UISystem.js"></script>
+<script src="./src/DisplayMapSystem.js"></script>
+<script src="./src/DisplayEntitiesSystem.js"></script>
+<script src="./src/MotionSystem.js"></script>
+<script src="./src/ControlSystem.js"></script>
+<script src="./src/BoundaryCollisionSystem.js"></script>
+<script src="./src/EntitiesCollisionSystem.js"></script>
+<script src="./src/CameraSystem.js"></script>
+<script src="./src/AnimationSystem.js"></script>
+<script src="./src/AISystem.js"></script>
+<script src="./src/MissileSystem.js"></script>
+<script src="./src/GameEntitySystem.js"></script>
+<script src="./src/SkillSystem.js"></script>
+<script src="./src/SFXSystem.js"></script>
+<script src="./src/Utils.js"></script>
+<script src="./src/WavesSystem.js"></script>
+<script src="./src/BonusSystem.js"></script>
+<!--<script src="./src/GameStateSystem.js"></script>-->
+
+<!-- User Interface -->
+<script src="./src/ImageButton.js"></script>
+<script src="./src/SkillButton.js"></script>
+<script src="./src/PauseBoard.js"></script>
+<script src="./src/EndGameBoard.js"></script>
+
+<!-- States -->
+<script src="./src/MainMenuState.js"></script>
+<script src="./src/PlayerSelectionState.js"></script>
+<script src="./src/MainState.js"></script>
+
+<!-- Engine -->
+<script src="./src/MikEngine.js"></script>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="50" height="10" tilewidth="64" tileheight="64">
+ <tileset firstgid="1" name="dirt" tilewidth="64" tileheight="64">
+  <image source="dirt.png" width="192" height="192"/>
+ </tileset>
+ <tileset firstgid="10" name="road" tilewidth="64" tileheight="64">
+  <image source="road.png" width="128" height="128"/>
+ </tileset>
+ <tileset firstgid="14" name="wall" tilewidth="64" tileheight="64">
+  <image source="wall.png" width="64" height="64"/>
+  <tile id="0">
+   <properties>
+    <property name="collidable" value="true"/>
+   </properties>
+  </tile>
+ </tileset>
+ <layer name="background" width="50" height="10">
+  <data encoding="base64" compression="zlib">
+   eJx1lVuugzAMBQMJj5TA/pdbKnmkwZf7YdH4cXzsxO5VSplvmULWkJ9uS1Jv6SE/+xLSImb/J24JG/YaMTXJrhj7z4Hf5QOHFrorzj3qwDYLn/hJuJP4W6bwXYXZFVfTb6SF3xa/m+pp0Qvw3uRSz5bAp+aqO6rChlsXj9z/JWH6Tuk9/YZ3F2dqBYO8fFfFcR/mBFf6a25dtl7+vp9ZXzDh4d7zBnfZu3SOo9+bYslBXIs6PrecIUech+RI31PnQ/qR9B9h4vOW69B5vJxHyntKwLsS91M4Z9Kb/0j2UZ7c0X/E1RzHS74j5TqEZRxzAoc5Z+8w437LzANz4/fJ+/YsdGHxJvKcevbA6uW5M8jvN+09UKWnjjy/k3Cok33MHqSuNdny3DivZwcOVT7egZ4X9mPeIdR+ledu3VMedhFxcH/zYx/PEmM2+fseWorJ/WBHUws9Jyd1dOXxfwB7Yy7P/QW3vIOIJR91uUd+N9Tg3cp/nLHoXe6D7/kLADoM2g==
+  </data>
+ </layer>
+</map>
