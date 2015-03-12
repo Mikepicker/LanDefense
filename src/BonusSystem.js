@@ -42,6 +42,10 @@ var BonusSystem =
 						this.gameState.lives += 1;
 						
 					ECSManager.removeEntity(ent);
+					
+					// Play Sound
+					SoundSystem.playSound("life",1,1,0);
+					
 					continue;
 				}
 			}
@@ -53,11 +57,42 @@ var BonusSystem =
 				
 				if (Utils.rectCollision(playerPos, entPos, playerBox, entBox))
 				{
-					// Show score
-					EntityFactory.createScoreBonus(entPos.x + entBox.width/2 + 16, entPos.y + entBox.height/2, CONFIG.goldBonusAmount);
+					var goldsFound = Math.floor((Math.random() * 100) + 50);
 					
-					this.gameState.golds += CONFIG.goldBonusAmount;
+					// Show score
+					EntityFactory.createScoreBonus(entPos.x + entBox.width/2 + 16, entPos.y + entBox.height/2, goldsFound);
+					
+					this.gameState.golds += goldsFound;
 					ECSManager.removeEntity(ent);
+					
+					// Play Sound
+					SoundSystem.playSound("gold",1,1,0);
+		
+					continue;
+				}
+			}
+			// HEAL POTION
+			else if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_HEALPOTION))
+			{
+				var entPos = ECSManager.getComponent(ent, ComponentType.COMPONENT_POSITION).position;
+				var entBox = ECSManager.getComponent(ent, ComponentType.COMPONENT_BOX);
+				var plGE = ECSManager.getComponent(this.player, ComponentType.COMPONENT_GAMEENTITY);
+				
+				if (Utils.rectCollision(playerPos, entPos, playerBox, entBox))
+				{
+					var healthFound = Math.floor((Math.random() * 500) + 100);
+					
+					plGE.health += healthFound;
+					
+					// Check for max health
+					if (plGE.health > plGE.maxHealth)
+						plGE.health = plGE.maxHealth;
+						
+					ECSManager.removeEntity(ent);
+					
+					// Play Sound
+					SoundSystem.playSound("potion",1,1,0);
+					
 					continue;
 				}
 			}

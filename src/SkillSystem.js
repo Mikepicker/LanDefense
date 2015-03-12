@@ -97,6 +97,9 @@ var SkillSystem =
 		motion.velocity.set(0,0);
 		AnimationSystem.changeAnimation(ent, anim.animationData["skill_" + gameEntity.orientation], true);
 		ECSManager.attachComponent(Object.create(EarthStrikeComponent), ent);
+		
+		// Play Sound
+		SoundSystem.playSound("earthstrike",0.5,2,0);
 	},
 	
 	// RANGER
@@ -125,6 +128,9 @@ var SkillSystem =
 				
 				MissileSystem.shootMissileToEnemy(pos.x + box.width/2, pos.y + box.height/2, fireArrow, ent, enemy);
 			}
+			
+			// Delete fire arrow
+			ECSManager.removeEntity(gameEntity.rangeWeapon);
 			
 			// Reload
 			gameEntity.rangeWeapon = gameEntity.quiver;
@@ -178,6 +184,9 @@ var SkillSystem =
 		// Shoot if there are enemies
 		if (enemies.length > 0)
 		{
+			ECSManager.removeEntity(gameEntity.rangeWeapon);
+			gameEntity.rangeWeapon = EntityFactory.createFireArrow(CONFIG.fireArrowsDamage);
+		
 			// Define new component
 			var skillComp = Object.create(MultipleArrowsComponent);
 			skillComp.enemies = enemies;
@@ -253,5 +262,8 @@ var SkillSystem =
 		ECSManager.detachComponent(ComponentType.COMPONENT_MELEEATTACKER, ent);
 		ECSManager.detachComponent(ComponentType.COMPONENT_MOVETOLOCATION, ent);
 		ECSManager.detachComponent(ComponentType.COMPONENT_SEEKENTITY, ent);
+		
+		// Play Sound
+		SoundSystem.playSound("frozenrain",0.5,1,0);
 	}
 }

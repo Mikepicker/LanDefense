@@ -104,11 +104,19 @@ var EntityFactory =
 		plControl.downKey = KeyboardKeys.DOWN;
 		plControl.rightKey = KeyboardKeys.RIGHT;
 		
+		// Keyboard Component
+		var plControlActive = Object.create(KeyboardActiveComponent);
+		
 		// Allied Component
 		var plAllied = Object.create(AlliedComponent);
 		
 		// Respawn Component
 		var plRespawn = Object.create(RespawnComponent);
+		
+		// Regeneration Component
+		var plRegen = Object.create(RegenerationComponent);
+		plRegen.regenRate = CONFIG.playerRegenRate;
+		plRegen.regenTime = 1000;
 		
 		switch(playerClass)
 		{
@@ -150,9 +158,11 @@ var EntityFactory =
 		ECSManager.attachComponent(plMot, pl);
 		ECSManager.attachComponent(plAnim, pl);
 		ECSManager.attachComponent(plControl, pl);
+		ECSManager.attachComponent(plControlActive, pl);
 		ECSManager.attachComponent(plComp, pl);
 		ECSManager.attachComponent(plAllied, pl);
 		ECSManager.attachComponent(plRespawn, pl);
+		ECSManager.attachComponent(plRegen, pl);
 		
 		return pl;
 	},
@@ -237,7 +247,80 @@ var EntityFactory =
 		// Animation Component
 		var entAnim = Object.create(AnimationComponent);	
 		entAnim.animationData = ASSETS.characters.infantry;
+				
+		// Side
+		var sideComp;
+		if (side === "allied")
+			sideComp = Object.create(AlliedComponent);
+		else if (side === "enemy")
+			sideComp = Object.create(EnemyComponent);
+			
+		ECSManager.attachComponent(gameEntity, ent);
+		ECSManager.attachComponent(entAI, ent);
+		ECSManager.attachComponent(entPos, ent);
+		ECSManager.attachComponent(entBox, ent);
+		ECSManager.attachComponent(entDisp, ent);
+		ECSManager.attachComponent(entMot, ent);
+		ECSManager.attachComponent(entAnim, ent);
+		ECSManager.attachComponent(sideComp, ent);
 		
+		// Move to location (if enemy)
+		if (side === "enemy")
+		{
+			var targetPos = Object.create(Vector2);
+			targetPos.set(-100, y);
+			GameEntitySystem.toMoveToLocationState(ent, targetPos);
+		}
+		
+		return ent;
+	},
+	
+	createCrossbowman: function(x,y, side)
+	{
+		var ent = ECSManager.createEntity();
+		
+		// Box Component
+		var entBox = Object.create(BoxComponent);
+		entBox.width = 64;
+		entBox.height = 64;
+		
+		// Position Component
+		var entPos = Object.create(PositionComponent);	
+		entPos.position = Object.create(Vector2);
+		entPos.position.x = x - (entBox.width/2);
+		entPos.position.y = y - (entBox.height/2);
+		
+		// GameEntity Component
+		var gameEntity = Object.create(GameEntityComponent);
+		gameEntity.name = "Crossbowman " + ent.ID;
+		gameEntity.maxHealth = CONFIG.crossbowmanHealth;
+		gameEntity.health = gameEntity.maxHealth;
+		gameEntity.shootingCooldown = CONFIG.crossbowmanShootingCooldown;
+		
+		// Weapons
+		gameEntity.meleeWeapon = EntityFactory.createSword("Knife", CONFIG.crossbowmanMeleeDmg);
+		gameEntity.rangeWeapon = EntityFactory.createArrow("Mike's Touch", CONFIG.crossbowmanRangeDmg);
+		gameEntity.quiver = EntityFactory.createArrow("Mike's Touch", CONFIG.crossbowmanRangeDmg);
+		
+		// AI Component
+		var entAI = Object.create(ReinforcementAIComponent);
+		entAI.fov = CONFIG.crossbowmanFov;
+		entAI.chaseRange = CONFIG.crossbowmanChaseRange;
+		entAI.lastPos = Object.create(Vector2);
+		entAI.lastPos.set(entPos.position.x, entPos.position.y);
+		
+		// Display Component
+		var entDisp = Object.create(DisplayComponent);
+		
+		// Motion Component
+		var entMot = Object.create(MotionComponent);
+		entMot.velocity = Object.create(Vector2);
+		entMot.speed = CONFIG.crossbowmanSpeed;
+		
+		// Animation Component
+		var entAnim = Object.create(AnimationComponent);	
+		entAnim.animationData = ASSETS.characters.crossbowman;
+				
 		// Side
 		var sideComp;
 		if (side === "allied")
@@ -528,6 +611,11 @@ var EntityFactory =
 		var entAnim = Object.create(AnimationComponent);	
 		entAnim.animationData = ASSETS.characters.phantom;
 		
+		// Regeneration Component
+		var entRegen = Object.create(RegenerationComponent);
+		entRegen.regenRate = CONFIG.phantomRegenRate;
+		entRegen.regenTime = 1000;
+		
 		// Side
 		var sideComp;
 		if (side === "allied")
@@ -546,6 +634,7 @@ var EntityFactory =
 		ECSManager.attachComponent(entMot, ent);
 		ECSManager.attachComponent(entAnim, ent);
 		ECSManager.attachComponent(sideComp, ent);
+		ECSManager.attachComponent(entRegen, ent);
 		
 		// Move to location (if enemy)
 		if (side === "enemy")
@@ -778,6 +867,225 @@ var EntityFactory =
 		return ent;
 	},
 	
+	createKamikaze: function(x,y, side)
+	{
+		var ent = ECSManager.createEntity();
+		
+		// Box Component
+		var entBox = Object.create(BoxComponent);
+		entBox.width = 64;
+		entBox.height = 64;
+		
+		// Position Component
+		var entPos = Object.create(PositionComponent);	
+		entPos.position = Object.create(Vector2);
+		entPos.position.x = x - (entBox.width/2);
+		entPos.position.y = y - (entBox.height/2);
+		
+		// GameEntity Component
+		var gameEntity = Object.create(GameEntityComponent);
+		gameEntity.name = "Kamikaze " + ent.ID;
+		gameEntity.maxHealth = CONFIG.kamikazeHealth;
+		gameEntity.health = gameEntity.maxHealth;
+		
+		// Weapons
+		gameEntity.meleeWeapon = EntityFactory.createSword("Explosive Barrel", CONFIG.kamikazeMeleeDmg);
+		
+		// AI Component
+		var entAI = Object.create(StandardEnemyAIComponent);
+		entAI.fov = CONFIG.kamikazeFov;
+		entAI.chaseRange = CONFIG.kamikazeChaseRange;
+		entAI.lastPos = Object.create(Vector2);
+		entAI.lastPos.set(entPos.position.x, entPos.position.y);
+		
+		// Display Component
+		var entDisp = Object.create(DisplayComponent);
+		
+		// Motion Component
+		var entMot = Object.create(MotionComponent);
+		entMot.velocity = Object.create(Vector2);
+		entMot.speed = CONFIG.kamikazeSpeed;
+		
+		// Animation Component
+		var entAnim = Object.create(AnimationComponent);	
+		entAnim.animationData = ASSETS.characters.kamikaze;
+		
+		// Kamikaze Component
+		var entKamikaze = Object.create(KamikazeComponent);
+		entKamikaze.explosionRange = CONFIG.kamikazeExplosionRange;
+		
+		// Side
+		var sideComp;
+		if (side === "allied")
+			sideComp = Object.create(AlliedComponent);
+		else if (side === "enemy")
+		{
+			sideComp = Object.create(EnemyComponent);
+			sideComp.golds = CONFIG.kamikazeGolds;
+		}
+			
+		ECSManager.attachComponent(gameEntity, ent);
+		ECSManager.attachComponent(entAI, ent);
+		ECSManager.attachComponent(entPos, ent);
+		ECSManager.attachComponent(entBox, ent);
+		ECSManager.attachComponent(entDisp, ent);
+		ECSManager.attachComponent(entMot, ent);
+		ECSManager.attachComponent(entAnim, ent);
+		ECSManager.attachComponent(sideComp, ent);
+		ECSManager.attachComponent(entKamikaze, ent);	// Kamikaze
+		
+		// Move to location (if enemy)
+		if (side === "enemy")
+		{
+			var targetPos = Object.create(Vector2);
+			targetPos.set(-100, y);
+			GameEntitySystem.toMoveToLocationState(ent, targetPos);
+		}
+		
+		return ent;
+	},
+	
+	createShaman: function(x,y, side)
+	{
+		var ent = ECSManager.createEntity();
+		
+		// Box Component
+		var entBox = Object.create(BoxComponent);
+		entBox.width = 64;
+		entBox.height = 64;
+		
+		// Position Component
+		var entPos = Object.create(PositionComponent);	
+		entPos.position = Object.create(Vector2);
+		entPos.position.x = x - (entBox.width/2);
+		entPos.position.y = y - (entBox.height/2);
+		
+		// GameEntity Component
+		var gameEntity = Object.create(GameEntityComponent);
+		gameEntity.name = "Shaman " + ent.ID;
+		gameEntity.maxHealth = CONFIG.shamanHealth;
+		gameEntity.health = gameEntity.maxHealth;
+		gameEntity.shootingCooldown = CONFIG.shamanShootingCooldown;
+		
+		// Weapons
+		gameEntity.rangeWeapon = EntityFactory.createDarkBall("Dark Ball", CONFIG.shamanRangeDmg);
+		gameEntity.quiver = EntityFactory.createDarkBall("Dark Ball", CONFIG.shamanRangeDmg);
+		
+		// AI Component
+		var entAI = Object.create(StandardEnemyAIComponent);
+		entAI.fov = CONFIG.shamanFov;
+		entAI.chaseRange = CONFIG.shamanChaseRange;
+		entAI.lastPos = Object.create(Vector2);
+		entAI.lastPos.set(entPos.position.x, entPos.position.y);
+		
+		// Display Component
+		var entDisp = Object.create(DisplayComponent);
+		
+		// Motion Component
+		var entMot = Object.create(MotionComponent);
+		entMot.velocity = Object.create(Vector2);
+		entMot.speed = CONFIG.shamanSpeed;
+		
+		// Animation Component
+		var entAnim = Object.create(AnimationComponent);	
+		entAnim.animationData = ASSETS.characters.shaman;
+		
+		// Side
+		var sideComp;
+		if (side === "allied")
+			sideComp = Object.create(AlliedComponent);
+		else if (side === "enemy")
+		{
+			sideComp = Object.create(EnemyComponent);
+			sideComp.golds = CONFIG.shamanGolds;
+		}
+			
+		ECSManager.attachComponent(gameEntity, ent);
+		ECSManager.attachComponent(entAI, ent);
+		ECSManager.attachComponent(entPos, ent);
+		ECSManager.attachComponent(entBox, ent);
+		ECSManager.attachComponent(entDisp, ent);
+		ECSManager.attachComponent(entMot, ent);
+		ECSManager.attachComponent(entAnim, ent);
+		ECSManager.attachComponent(sideComp, ent);
+		
+		// Move to location (if enemy)
+		if (side === "enemy")
+		{
+			var targetPos = Object.create(Vector2);
+			targetPos.set(-100, y);
+			GameEntitySystem.toMoveToLocationState(ent, targetPos);
+		}
+		
+		return ent;
+	},
+	
+	createGhost: function(x,y, side)
+	{
+		var ent = ECSManager.createEntity();
+		
+		// Box Component
+		var entBox = Object.create(BoxComponent);
+		entBox.width = 64;
+		entBox.height = 64;
+		
+		// Position Component
+		var entPos = Object.create(PositionComponent);	
+		entPos.position = Object.create(Vector2);
+		entPos.position.x = x - (entBox.width/2);
+		entPos.position.y = y - (entBox.height/2);
+		
+		// GameEntity Component
+		var gameEntity = Object.create(GameEntityComponent);
+		gameEntity.name = "Ghost " + ent.ID;
+		gameEntity.maxHealth = CONFIG.ghostHealth;
+		gameEntity.health = gameEntity.maxHealth;
+		
+		// AI Component
+		var entAI = Object.create(ElusiveAIComponent);
+		
+		// Display Component
+		var entDisp = Object.create(DisplayComponent);
+		
+		// Motion Component
+		var entMot = Object.create(MotionComponent);
+		entMot.velocity = Object.create(Vector2);
+		entMot.speed = CONFIG.ghostSpeed;
+		
+		// Animation Component
+		var entAnim = Object.create(AnimationComponent);	
+		entAnim.animationData = ASSETS.characters.ghost;
+		
+		// Side
+		var sideComp;
+		if (side === "allied")
+			sideComp = Object.create(AlliedComponent);
+		else if (side === "enemy")
+		{
+			sideComp = Object.create(EnemyComponent);
+			sideComp.golds = CONFIG.ghostGolds;
+		}
+			
+		ECSManager.attachComponent(gameEntity, ent);
+		ECSManager.attachComponent(entAI, ent);
+		ECSManager.attachComponent(entPos, ent);
+		ECSManager.attachComponent(entBox, ent);
+		ECSManager.attachComponent(entDisp, ent);
+		ECSManager.attachComponent(entMot, ent);
+		ECSManager.attachComponent(entAnim, ent);
+		ECSManager.attachComponent(sideComp, ent);
+		
+		// Move to location (if enemy)
+		if (side === "enemy")
+		{
+			var targetPos = Object.create(Vector2);
+			targetPos.set(-100, y);
+			GameEntitySystem.toMoveToLocationState(ent, targetPos);
+		}
+		
+		return ent;
+	},
+	
 	//-------------------------------------------------------------//
 	//------------------------// WEAPONS //------------------------//
 	//-------------------------------------------------------------//
@@ -795,6 +1103,10 @@ var EntityFactory =
 		missileComp.speed = 0.2;
 		missileComp.damage = 30;
 		missileComp.img = "javelin";
+		missileComp.shotSound = "arrow_shot";
+		missileComp.shotSoundVol = 1;
+		missileComp.hitSound = "arrow_hit";
+		missileComp.hitSoundVol = 0.2;
 		
 		// Box Component
 		var missileBox = Object.create(BoxComponent);
@@ -821,6 +1133,10 @@ var EntityFactory =
 		var missileComp = Object.create(MissileComponent);
 		missileComp.speed = CONFIG.arrowSpeed;
 		missileComp.img = "arrow";
+		missileComp.shotSound = "arrow_shot";
+		missileComp.shotSoundVol = 1;
+		missileComp.hitSound = "arrow_hit";
+		missileComp.hitSoundVol = 0.2;
 		
 		// Box Component
 		var missileBox = Object.create(BoxComponent);
@@ -847,6 +1163,10 @@ var EntityFactory =
 		var missileComp = Object.create(MissileComponent);
 		missileComp.speed = CONFIG.fireArrowsSpeed;
 		missileComp.img = "fire_arrow";
+		missileComp.shotSound = "multiplearrows";
+		missileComp.shotSoundVol = 1;
+		missileComp.hitSound = "arrow_hit";
+		missileComp.hitSoundVol = 0.2;
 		
 		// Box Component
 		var missileBox = Object.create(BoxComponent);
@@ -873,6 +1193,10 @@ var EntityFactory =
 		var missileComp = Object.create(MissileComponent);
 		missileComp.speed = CONFIG.magicBallSpeed;
 		missileComp.img = "magic_ball";
+		missileComp.shotSound = "magic_shot";
+		missileComp.shotSoundVol = 1;
+		missileComp.hitSound = "magic_hit";
+		missileComp.hitSoundVol = 0.2;
 		
 		// Box Component
 		var missileBox = Object.create(BoxComponent);
@@ -884,6 +1208,36 @@ var EntityFactory =
 		ECSManager.attachComponent(missileBox, magicBall);
 		
 		return magicBall;
+	},
+	
+	createDarkBall: function(name, damage)
+	{
+		var darkBall = ECSManager.createEntity();
+		
+		// Weapon Component
+		var weaponComp = Object.create(WeaponComponent);
+		weaponComp.name = name;
+		weaponComp.damage = damage;
+		
+		// Missile Component
+		var missileComp = Object.create(MissileComponent);
+		missileComp.speed = CONFIG.magicBallSpeed;
+		missileComp.img = "dark_ball";
+		missileComp.shotSound = "magic_shot";
+		missileComp.shotSoundVol = 1;
+		missileComp.hitSound = "magic_hit";
+		missileComp.hitSoundVol = 0.2;
+		
+		// Box Component
+		var missileBox = Object.create(BoxComponent);
+		missileBox.width = 32;
+		missileBox.height = 32;
+		
+		ECSManager.attachComponent(weaponComp, darkBall);
+		ECSManager.attachComponent(missileComp, darkBall);
+		ECSManager.attachComponent(missileBox, darkBall);
+		
+		return darkBall;
 	},
 	
 	createSword: function(name, damage)
@@ -991,6 +1345,34 @@ var EntityFactory =
 		ECSManager.attachComponent(display, ent);
 	},
 	
+	createHealPotion: function(x, y)
+	{
+		var ent = ECSManager.createEntity();
+		
+		// Score Bonus Component
+		var healPotComp = Object.create(HealPotionComponent);
+		healPotComp.img = "heal_potion";
+		
+		// Box Component
+		var entBox = Object.create(BoxComponent);
+		entBox.width = 32;
+		entBox.height = 32;
+		
+		// Position Component
+		var entPos = Object.create(PositionComponent);	
+		entPos.position = Object.create(Vector2);
+		entPos.position.x = x - (entBox.width/2);
+		entPos.position.y = y - (entBox.height/2);
+		
+		// Display Component
+		var display = Object.create(DisplayComponent);
+		
+		ECSManager.attachComponent(healPotComp, ent);
+		ECSManager.attachComponent(entBox, ent);
+		ECSManager.attachComponent(entPos, ent);
+		ECSManager.attachComponent(display, ent);
+	},
+	
 	callReinforcements: function(targetPos)
 	{
 		var size = 2;
@@ -1026,7 +1408,7 @@ var EntityFactory =
 		{
 			var realTargetY = Math.floor(targetPos.y + ((i-Math.floor(size/2)) * offsetY));
 			
-			var ent = EntityFactory.createInfantry(-32 - offsetX, realTargetY, "allied");
+			var ent = EntityFactory.createCrossbowman(-32 - offsetX, realTargetY, "allied");
 			var location = Object.create(Vector2);
 			location.set(targetPos.x - offsetX, realTargetY);
 			GameEntitySystem.toMoveToLocationState(ent, location);
@@ -1037,6 +1419,8 @@ var EntityFactory =
 			reinf.position.set(targetPos.x - offsetX, realTargetY);
 			ECSManager.attachComponent(reinf, ent);
 		}
+		
+		SoundSystem.playSound("reinforcements",1,1,1);
 	},
 	
 	createIceDrop: function()
@@ -1076,5 +1460,39 @@ var EntityFactory =
 		ECSManager.attachComponent(entBox, ent);
 		ECSManager.attachComponent(entDisp, ent);
 		ECSManager.attachComponent(entMot, ent);
+	},
+	
+	createExplosion: function(x,y)
+	{
+		var ent = ECSManager.createEntity();
+		
+		// Explosion Object
+		var explosion = Object.create(ExplosionComponent);
+		
+		// Box Component
+		var entBox = Object.create(BoxComponent);
+		entBox.width = 32;
+		entBox.height = 32;
+		
+		// Position Component
+		var entPos = Object.create(PositionComponent);	
+		entPos.position = Object.create(Vector2);
+		entPos.position.x = x;
+		entPos.position.y = y;
+		
+		// Display Component
+		var entDisp = Object.create(DisplayComponent);
+		
+		// Animation Component
+		var entAnim = Object.create(AnimationComponent);
+		entAnim.animationData = ASSETS.effects.explosion;
+		
+		ECSManager.attachComponent(explosion, ent);
+		ECSManager.attachComponent(entPos, ent);
+		ECSManager.attachComponent(entBox, ent);
+		ECSManager.attachComponent(entDisp, ent);
+		ECSManager.attachComponent(entAnim, ent);
+		
+		AnimationSystem.changeAnimation(ent, entAnim.animationData["explode"], true);
 	}
 }

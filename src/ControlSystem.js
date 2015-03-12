@@ -43,16 +43,12 @@ var ControlSystem =
 	
 	update: function(dt)
 	{
+		if (this.gameState.gamePaused)
+			return;
+			
 		for (var i = 0; i < ECSManager.entities.length; i++)
 		{
 			var ent = ECSManager.entities[i];
-			
-			// Toggle game paused
-			if (keyPressed[KeyboardKeys.PAUSE])
-			{
-				this.gameState.gamePaused = !this.gameState.gamePaused;
-				keyPressed[KeyboardKeys.PAUSE] = false;
-			}
 				
 			// Movement
 			if (this.checkComponents(ent))
@@ -137,6 +133,7 @@ var ControlSystem =
 				ECSManager.hasComponent(ent, ComponentType.COMPONENT_GAMEENTITY) &&
 				ECSManager.hasComponent(ent, ComponentType.COMPONENT_POSITION) &&
 				ECSManager.hasComponent(ent, ComponentType.COMPONENT_KEYBOARD) &&
+				ECSManager.hasComponent(ent, ComponentType.COMPONENT_KEYBOARDACTIVE) &&
 				ECSManager.hasComponent(ent, ComponentType.COMPONENT_MOTION) &&
 				ECSManager.hasComponent(ent, ComponentType.COMPONENT_ANIMATION) &&
 				!ECSManager.hasComponent(ent, ComponentType.COMPONENT_EARTHSTRIKE) &&

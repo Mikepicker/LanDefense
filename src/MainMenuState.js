@@ -10,8 +10,11 @@ var MainMenuState =
 		// Reset ECS Manager
 		ECSManager.reset();
 		
+		SoundSystem.reset();
+		
 		// Systems
 		ECSManager.addSystem(Object.create(MainMenuSystem));
+		ECSManager.addSystem(Object.create(SoundSystem));
 		
 		this.initialized = true;
 	},

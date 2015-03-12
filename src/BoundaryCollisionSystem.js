@@ -62,7 +62,8 @@ var BoundaryCollisionSystem =
 						boundaryHit = true;
 					}
 				}
-				else if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_ENEMY))
+				else if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_ENEMY) &&
+						 !ECSManager.hasComponent(ent, ComponentType.COMPONENT_DEAD))
 				{
 					// Delete entities that go out of map left bound
 					if (entPos.x + entBox.width <= 0)
@@ -71,7 +72,11 @@ var BoundaryCollisionSystem =
 							this.gameState.lives--;
 						
 						this.gameState.enemiesAlive--;
-						ECSManager.removeEntity(ent);
+						
+						// Kill Entity
+						var deadComp = Object.create(DeadComponent);
+						ECSManager.attachComponent(deadComp, ent);
+						
 						continue;
 					}
 				}

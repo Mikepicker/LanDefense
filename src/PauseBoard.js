@@ -89,6 +89,7 @@ var PauseBoard =
 			{
 				this.state = "exit";
 				this.gameState.gamePaused = false;
+				MOUSE_CLICKED = false;
 			}
 			
 			// Restart Button

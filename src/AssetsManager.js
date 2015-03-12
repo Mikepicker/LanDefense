@@ -3,6 +3,9 @@ var AssetsManager =
 	images: new Object(),
 	sounds: new Object(),
 	
+	assetsLoaded: 0,
+	assetsToLoad: 0,
+	
 	reset: function()
 	{
 		this.images = new Object();
@@ -13,20 +16,42 @@ var AssetsManager =
 	{
 		if (!this.images[resID])
 		{
+			AssetsManager.assetsToLoad++;
+			
 			var image = new Image();
 			image.src = path;
 			image.onerror = function() { console.log("Failed to load image"); }
+			image.onload = function()
+			{ 
+				AssetsManager.assetsLoaded++;
+				AssetsManager.assetsToLoad--;
+			}
 			
 			this.images[resID] = image;
 		}
 	},
 	
-	// Declared in HTML
-	loadSound: function(resID)
+	loadSound: function(resID, path)
 	{
-		// Load sound and put it inside the table
-		var sound = document.querySelector("#" + resID);
-		this.sounds[resID] = sound;
-		sound.load();
+		if (!this.sounds[resID])
+		{
+			AssetsManager.assetsToLoad++;
+			
+			var sound = new Audio(path);
+			sound.load();
+			sound.onerror = function() 
+			{ 
+				console.log("Failed to load sound");
+				AssetsManager.assetsLoaded++;
+				AssetsManager.assetsToLoad--; 
+			}
+			sound.oncanplay = function()
+			{ 
+				AssetsManager.assetsLoaded++;
+				AssetsManager.assetsToLoad--;
+			}
+			
+			this.sounds[resID] = sound;
+		}
 	}
 };

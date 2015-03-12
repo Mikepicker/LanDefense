@@ -73,16 +73,31 @@ var DisplayEntitiesSystem =
 		(
 			function(e1,e2)
 			{
+				// Put missiles always in front
+				if (ECSManager.hasComponent(e1, ComponentType.COMPONENT_MISSILE))
+					return 1;
+				
+				if (ECSManager.hasComponent(e2, ComponentType.COMPONENT_MISSILE))
+					return -1;
+					
 				var e1PosY = 0;
 				var e2PosY = 0;
+				var e1Height = 0;
+				var e2Height = 0;
 				
 				if (ECSManager.hasComponent(e1, ComponentType.COMPONENT_POSITION))
 					e1PosY = ECSManager.getComponent(e1, ComponentType.COMPONENT_POSITION).position.y;
 					
 				if (ECSManager.hasComponent(e2, ComponentType.COMPONENT_POSITION))
 					e2PosY = ECSManager.getComponent(e2, ComponentType.COMPONENT_POSITION).position.y;
+				
+				if (ECSManager.hasComponent(e1, ComponentType.COMPONENT_BOX))
+					e1Height = ECSManager.getComponent(e1, ComponentType.COMPONENT_BOX).height;
 					
-				return e1PosY - e2PosY;
+				if (ECSManager.hasComponent(e2, ComponentType.COMPONENT_BOX))
+					e2Height = ECSManager.getComponent(e2, ComponentType.COMPONENT_BOX).height;
+					
+				return (e1PosY+e1Height) - (e2PosY+e2Height);
 			}
 		);
 		
@@ -159,6 +174,31 @@ var DisplayEntitiesSystem =
 					continue;
 				}
 				
+				// Explosion
+				if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_EXPLOSION))
+				{
+					var animation = ECSManager.getComponent(ent, ComponentType.COMPONENT_ANIMATION);
+					var frameData = animation.currentAnimation.frames[animation.currentFrame];
+					var spriteSheet = AssetsManager.images[animation.animationData.type];
+					
+					if (!animation.triggered)
+						continue;
+						
+					// Draw Entity
+					mapCanvasCtx.drawImage
+					(
+						spriteSheet,
+						frameData.sourceX,
+						frameData.sourceY,
+						frameData.width,
+						frameData.height,
+						position.x,
+						position.y,
+						frameData.width,
+						frameData.height
+					);
+				}
+				
 				// Bonuses
 				if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_LIFEBONUS))
 				{
@@ -175,6 +215,26 @@ var DisplayEntitiesSystem =
 						32,
 						32
 					);
+					
+					mapCanvasCtx.save();
+					mapCanvasCtx.globalAlpha = 0.6
+				
+					// Draw shadow
+					mapCanvasCtx.drawImage
+					(
+						AssetsManager.images["shadow"],
+						0,
+						0,
+						64,
+						16,
+						position.x | 0,
+						(position.y + box.height + 12) | 0,
+						64,
+						16
+					);
+					
+					mapCanvasCtx.restore();
+						
 					continue;
 				}
 				else if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_GOLDBONUS))
@@ -192,6 +252,61 @@ var DisplayEntitiesSystem =
 						32,
 						32
 					);
+
+					mapCanvasCtx.save();
+					mapCanvasCtx.globalAlpha = 0.6;
+				
+					// Draw shadow
+					mapCanvasCtx.drawImage
+					(
+						AssetsManager.images["shadow"],
+						0,
+						0,
+						64,
+						16,
+						position.x | 0,
+						(position.y + box.height + 12) | 0,
+						64,
+						16
+					);
+					
+					mapCanvasCtx.restore();					
+					continue;
+				}
+				else if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_HEALPOTION))
+				{
+					var healPotComp = ECSManager.getComponent(ent, ComponentType.COMPONENT_HEALPOTION)
+					mapCanvasCtx.drawImage
+					(
+						AssetsManager.images[healPotComp.img],
+						0,
+						0,
+						32,
+						32,
+						(position.x + box.width/2) | 0,
+						(position.y + box.height/2) | 0,
+						32,
+						32
+					);
+
+					mapCanvasCtx.save();
+					mapCanvasCtx.globalAlpha = 0.6;
+				
+					// Draw shadow
+					mapCanvasCtx.drawImage
+					(
+						AssetsManager.images["shadow"],
+						0,
+						0,
+						64,
+						16,
+						position.x | 0,
+						(position.y + box.height + 12) | 0,
+						64,
+						16
+					);
+					
+					mapCanvasCtx.restore();					
 					continue;
 				}
 				
@@ -224,7 +339,7 @@ var DisplayEntitiesSystem =
 							0,
 							32,
 							32,
-							(position.x + box.width/2) | 0,
+							(position.x + box.width/2 - 16) | 0,
 							(position.y + box.height/2) | 0,
 							32,
 							32
@@ -266,7 +381,7 @@ var DisplayEntitiesSystem =
 						
 						// Offset for flipped-images
 						var offset = 0;
-						if (gameEntity.orientation === "left")
+						if (animation.currentAnimation.orientation === "left")
 							offset = frameData.width - box.width;
 						
 						// Draw Red mask if entity is hit / Blue if entity is frozen
@@ -377,7 +492,8 @@ var DisplayEntitiesSystem =
 			if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_POSITION) &&
 				ECSManager.hasComponent(ent, ComponentType.COMPONENT_BOX) &&
 				ECSManager.hasComponent(ent, ComponentType.COMPONENT_DISPLAY) &&
-				ECSManager.hasComponent(ent, ComponentType.COMPONENT_GAMEENTITY))
+				ECSManager.hasComponent(ent, ComponentType.COMPONENT_GAMEENTITY) &&
+				!ECSManager.hasComponent(ent, ComponentType.COMPONENT_DEAD))
 			{
 				var entPos = ECSManager.getComponent(ent, ComponentType.COMPONENT_POSITION).position;
 				var entBox = ECSManager.getComponent(ent, ComponentType.COMPONENT_BOX);

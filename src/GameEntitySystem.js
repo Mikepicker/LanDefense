@@ -43,6 +43,13 @@ var GameEntitySystem =
 		{
 			var ent = ECSManager.entities[i];
 			
+			// Handle Explosions
+			if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_EXPLOSION))
+			{
+				this.handleExplosion(ent);
+				continue;
+			}
+			
 			if (!this.checkComponents(ent))
 				continue;
 				
@@ -52,22 +59,22 @@ var GameEntitySystem =
 			var anim = ECSManager.getComponent(ent, ComponentType.COMPONENT_ANIMATION);
 			var gameEntity = ECSManager.getComponent(ent, ComponentType.COMPONENT_GAMEENTITY);
 			
-			// Handle player regeneration
-			if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_PLAYER) &&
+			// Handle health regeneration
+			if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_REGENERATION) &&
 				!ECSManager.hasComponent(ent, ComponentType.COMPONENT_DEAD))
 			{
-				var playerComp = ECSManager.getComponent(ent, ComponentType.COMPONENT_PLAYER);
+				var regenComp = ECSManager.getComponent(ent, ComponentType.COMPONENT_REGENERATION);
 				
-				if (playerComp.regenTimer >= playerComp.regenTime)
+				if (regenComp.regenTimer >= regenComp.regenTime)
 				{
-					gameEntity.health += CONFIG.playerRegenRate;
+					gameEntity.health += regenComp.regenRate;
 					if (gameEntity.health >= gameEntity.maxHealth)
 						gameEntity.health = gameEntity.maxHealth;
 					
-					playerComp.regenTimer = 0;
+					regenComp.regenTimer = 0;
 				}
 				else
-					playerComp.regenTimer += dt;
+					regenComp.regenTimer += dt;
 			}
 			
 			// Handle entities who have been hit
@@ -127,6 +134,17 @@ var GameEntitySystem =
 				this.toMoveToLocationState(ent, targetPos);
 			}
 			
+			// Invulnerability
+			if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_INVULNERABLE))
+			{
+				var invulnComp = ECSManager.getComponent(ent, ComponentType.COMPONENT_INVULNERABLE);
+				
+				if (invulnComp.timer >= invulnComp.time)
+					ECSManager.detachComponent(ComponentType.COMPONENT_INVULNERABLE, ent);
+				else
+					invulnComp.timer += dt;
+			}
+			
 			if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_RANGEATTACKER))		// Entity has to shoot
 			{
 				this.rangeAttack(ent);
@@ -161,6 +179,78 @@ var GameEntitySystem =
 		}
 	},
 	
+	handleExplosion: function(ent)
+	{
+		var anim = ECSManager.getComponent(ent, ComponentType.COMPONENT_ANIMATION);
+		
+		// Check for animation ending
+		if (!anim.triggered)
+			ECSManager.removeEntity(ent);
+	},
+	
+	handleKamikazeExplosion: function(ent)
+	{
+		var pos = ECSManager.getComponent(ent, ComponentType.COMPONENT_POSITION).position;
+		var motion = ECSManager.getComponent(ent, ComponentType.COMPONENT_MOTION);
+		var box = ECSManager.getComponent(ent, ComponentType.COMPONENT_BOX);
+		var gameEntity = ECSManager.getComponent(ent, ComponentType.COMPONENT_GAMEENTITY);
+		var anim = ECSManager.getComponent(ent, ComponentType.COMPONENT_ANIMATION);
+		
+		var centerPos = Object.create(Vector2);
+		centerPos.set(pos.x + box.width/2, pos.y + box.height/2);
+		
+		var meleeWeapon = ECSManager.getComponent(gameEntity.meleeWeapon, ComponentType.COMPONENT_WEAPON);
+		var kamikazeComp = ECSManager.getComponent(ent, ComponentType.COMPONENT_KAMIKAZE);
+		var entities = this.getEntitiesInRange(ent, pos, kamikazeComp.explosionRange);
+		
+		for (var i = 0; i < entities.length; i++)
+		{
+			var entPos = ECSManager.getComponent(entities[i], ComponentType.COMPONENT_POSITION).position;
+			var entBox = ECSManager.getComponent(entities[i], ComponentType.COMPONENT_BOX);
+			var entMot = ECSManager.getComponent(entities[i], ComponentType.COMPONENT_MOTION);
+			
+			// Impulse
+			var impulseComp = Object.create(ImpulseComponent);
+			var dir = Object.create(Vector2);
+			dir.x = (entPos.x + entBox.width/2) - centerPos.x;
+			dir.y = (entPos.y + entBox.height/2) - centerPos.y;
+			dir.normalize();
+			dir.mulScalar(CONFIG.kamikazeExplosionMagnitude);
+			
+			entMot.velocity.set(dir.x, dir.y);
+			
+			ECSManager.attachComponent(Object.create(ImpulseComponent), entities[i]);
+			
+			// Deactive control for player
+			if (ECSManager.hasComponent(entities[i], ComponentType.COMPONENT_KEYBOARD))
+				ECSManager.detachComponent(ComponentType.COMPONENT_KEYBOARDACTIVE, entities[i]);
+				
+			// Hit Target
+			var hitComp = Object.create(HitComponent);
+			hitComp.attacker = ent;
+			hitComp.hitEntity = entities[i];
+			hitComp.damage = meleeWeapon.damage;
+			ECSManager.attachComponent(hitComp, entities[i]);
+		}
+		
+		// Kill Entity
+		var deadComp = Object.create(DeadComponent);
+		ECSManager.attachComponent(deadComp, ent);
+		
+		// Explosion effect
+		EntityFactory.createExplosion(pos.x + box.width/2 - 128/2, pos.y + box.height/2 - 128/2);
+		
+		// Shake screen!
+		SFXSystem.shakeScreen(2000,5);
+
+		// Play Sound
+		SoundSystem.playSound("explosion",0.5,1,0);
+				
+		this.gameState.enemiesAlive--;
+		return;
+		
+	},
+	
 	handleDeadEntity: function(ent, dt)
 	{
 		var pos = ECSManager.getComponent(ent, ComponentType.COMPONENT_POSITION).position;
@@ -168,7 +258,8 @@ var GameEntitySystem =
 		var gameEntity = ECSManager.getComponent(ent, ComponentType.COMPONENT_GAMEENTITY);
 		var display = ECSManager.getComponent(ent, ComponentType.COMPONENT_DISPLAY);
 		var deadComp = ECSManager.getComponent(ent, ComponentType.COMPONENT_DEAD);
-				
+		var plGameEntity = ECSManager.getComponent(this.player, ComponentType.COMPONENT_GAMEENTITY);
+		
 		display.alpha = 1 - (deadComp.fadeTimer / deadComp.fadeTime);
 			
 		if (display.alpha <= 0)
@@ -179,6 +270,10 @@ var GameEntitySystem =
 			if (this.isPlayer(ent))
 			{
 				ECSManager.attachComponent(Object.create(RespawnComponent), ent);
+				var invulnComp = Object.create(InvulnerableComponent);
+				invulnComp.time = 5000;
+				ECSManager.attachComponent(invulnComp, ent);
+				
 				gameEntity.health = gameEntity.maxHealth;
 				display.alpha = 1;
 				pos.set(-box.width, 320);
@@ -187,22 +282,39 @@ var GameEntitySystem =
 				ECSManager.detachComponent(ComponentType.COMPONENT_MELEEATTACKER, ent);
 				ECSManager.detachComponent(ComponentType.COMPONENT_RANGEATTACKER, ent);
 				ECSManager.detachComponent(ComponentType.COMPONENT_MOVETOLOCATION, ent);
+				
+				// Decrease Lives
+				this.gameState.lives--;
 			}
 			else
 			{
 				// Spawn random bonus
-				if (Math.random() >= 0.9)
+				if (Math.random() >= 0.8)
 				{
 					if (Math.random() >= 0.7)
 					{
 						if (this.gameState.lives < this.gameState.maxLives)
 							EntityFactory.createLifeBonus(pos.x + box.width/2, pos.y + box.height);
 					}
-					else
+					// Drop potion with prob inv. proportional to health
+					else if (Math.random() >= plGameEntity.health/plGameEntity.maxHealth)
+						EntityFactory.createHealPotion(pos.x + box.width/2, pos.y + box.height);
+					else 
 						EntityFactory.createGoldBonus(pos.x + box.width/2, pos.y + box.height);
+						
 				}
 				
+				// Remove entity and its weapon(s)
 				ECSManager.removeEntity(ent);
+				
+				if (gameEntity.meleeWeapon !== null)
+					ECSManager.removeEntity(gameEntity.meleeWeapon);
+				
+				if (gameEntity.rangeWeapon !== null)
+					ECSManager.removeEntity(gameEntity.rangeWeapon);
+					
+				if (gameEntity.quiver !== null)
+					ECSManager.removeEntity(gameEntity.quiver);
 			}
 			
 			return;
@@ -213,16 +325,36 @@ var GameEntitySystem =
 	
 	handleHitEntity: function(ent, dt)
 	{
+		// Invulnerable entity
+		if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_INVULNERABLE))
+		{
+			ECSManager.detachComponent(ComponentType.COMPONENT_HIT, ent);
+			return;
+		}
+		
 		var hitComp = ECSManager.getComponent(ent, ComponentType.COMPONENT_HIT);
 		if (hitComp.timer >= hitComp.time)
 			ECSManager.detachComponent(ComponentType.COMPONENT_HIT, ent);
 		else
 			hitComp.timer += dt;
-			
+		
 		// Apply damage
 		if (!hitComp.damageApplied)
 		{
 			hitComp.damageApplied = true;
+			
+			// Spawn zombie if the attacker is infected ;)
+			if (ECSManager.hasComponent(hitComp.attacker, ComponentType.COMPONENT_VIRUST))
+			{
+				var entPos = ECSManager.getComponent(ent, ComponentType.COMPONENT_POSITION).position;
+				var entBox = ECSManager.getComponent(ent, ComponentType.COMPONENT_BOX);
+				EntityFactory.createZombie(entPos.x + entBox.width/2, entPos.y + entBox.height/2, "enemy");
+				this.gameState.enemiesAlive++;
+				console.log(this.gameState.enemiesAlive);
+				var deadComp = Object.create(DeadComponent);
+				ECSManager.attachComponent(deadComp, ent);
+				return;
+			}
 			
 			var entGE = ECSManager.getComponent(ent, ComponentType.COMPONENT_GAMEENTITY);
 			entGE.health -= hitComp.damage;
@@ -239,20 +371,23 @@ var GameEntitySystem =
 					var entBox = ECSManager.getComponent(ent, ComponentType.COMPONENT_BOX);
 					enemyComp = ECSManager.getComponent(ent, ComponentType.COMPONENT_ENEMY);
 					
-					this.gameState.golds += enemyComp.golds;
-					this.gameState.enemiesAlive--;
+					var goldsFound = Math.floor((Math.random() * (enemyComp.golds + 5)) + (enemyComp.golds - 5));
+					this.gameState.golds += goldsFound;
+					this.gameState.score += goldsFound;
 					
 					// Show score
-					EntityFactory.createScoreBonus(entPos.x + entBox.width/2 + 16, entPos.y + entBox.height/2, enemyComp.golds);
+					EntityFactory.createScoreBonus(entPos.x + entBox.width/2, entPos.y + entBox.height/2, goldsFound);
+					
+					// Play Sound
+					SoundSystem.playSound("bonus",1,1,0);
 				}
 				
-				// Spawn zombie if the attacker is infected ;)
-				if (ECSManager.hasComponent(hitComp.attacker, ComponentType.COMPONENT_VIRUST))
+				// Explode if kamikaze
+				if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_KAMIKAZE))
+					this.handleKamikazeExplosion(ent);
+				else if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_ENEMY))
 				{
-					var entPos = ECSManager.getComponent(ent, ComponentType.COMPONENT_POSITION).position;
-					var entBox = ECSManager.getComponent(ent, ComponentType.COMPONENT_BOX);
-					EntityFactory.createZombie(entPos.x + entBox.width/2, entPos.y + entBox.height/2, "enemy");
-					this.gameState.enemiesAlive++;
+					this.gameState.enemiesAlive--;
 				}
 			}
 		}
@@ -472,6 +607,9 @@ var GameEntitySystem =
 					if (gameEntity.health > gameEntity.maxHealth)
 						gameEntity.health = gameEntity.maxHealth;
 				}
+				
+				// Play Sound
+				SoundSystem.playSound("punch",0.6,1,0.35)
 			}
 		}
 		
@@ -516,6 +654,9 @@ var GameEntitySystem =
 	
 	seekEntity: function(ent)
 	{
+		if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_DEAD))
+			return;
+			
 		var pos = ECSManager.getComponent(ent, ComponentType.COMPONENT_POSITION).position;
 		var motion = ECSManager.getComponent(ent, ComponentType.COMPONENT_MOTION);
 		var box = ECSManager.getComponent(ent, ComponentType.COMPONENT_BOX);
@@ -538,7 +679,9 @@ var GameEntitySystem =
 				GameEntitySystem.toMoveToLocationState(ent, reinf.position);
 			}
 		}
-		else	// Keep follow enemy
+		else if (!ECSManager.hasComponent(enemy, ComponentType.COMPONENT_DEAD) &&
+				 ECSManager.hasComponent(enemy, ComponentType.COMPONENT_POSITION) &&
+				 ECSManager.hasComponent(enemy, ComponentType.COMPONENT_BOX))	// Keep follow enemy
 		{
 			var enemyPos = ECSManager.getComponent(enemy, ComponentType.COMPONENT_POSITION).position;
 			var enemyBox = ECSManager.getComponent(enemy, ComponentType.COMPONENT_BOX);
@@ -555,6 +698,13 @@ var GameEntitySystem =
 			if (Utils.rectCollision(pos, enemyPos, box, enemyBox))
 			{
 				motion.velocity.set(0,0);
+				
+				// Explode if kamikaze
+				if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_KAMIKAZE))
+				{
+					this.handleKamikazeExplosion(ent);
+					return;
+				}
 				
 				// Check for weapon
 				if (gameEntity.meleeWeapon && ECSManager.hasComponent(gameEntity.meleeWeapon, ComponentType.COMPONENT_WEAPON))
@@ -823,6 +973,38 @@ var GameEntitySystem =
 				ECSManager.hasComponent(enemy, ComponentType.COMPONENT_DEAD) ||
 				(ECSManager.hasComponent(ent, ComponentType.COMPONENT_ALLIED) && ECSManager.hasComponent(enemy, ComponentType.COMPONENT_ALLIED)) ||
 				(ECSManager.hasComponent(ent, ComponentType.COMPONENT_ENEMY) && ECSManager.hasComponent(enemy, ComponentType.COMPONENT_ENEMY))) 
+				continue;
+				
+			enemyPos = ECSManager.getComponent(enemy, ComponentType.COMPONENT_POSITION).position;
+			enemyBox = ECSManager.getComponent(enemy, ComponentType.COMPONENT_BOX);
+			
+			var dist = Object.create(Vector2);
+			dist.set(enemyPos.x + enemyBox.width/2, enemyPos.y + enemyBox.height/2);
+			dist.x -= targetPos.x;
+			dist.y -= targetPos.y;
+			
+			if (dist.length() <= range)
+				returnEntities.push(enemy);
+		}
+		
+		return returnEntities;
+	},
+	
+	getEntitiesInRange: function(ent, targetPos, range)
+	{
+		var returnEntities = [];
+		
+		for (var i = 0; i < ECSManager.entities.length; i++)
+		{
+			enemy = ECSManager.entities[i];
+			
+			if (enemy == ent)
+				continue;
+				
+			if (!ECSManager.hasComponent(enemy, ComponentType.COMPONENT_POSITION) ||
+				!ECSManager.hasComponent(enemy, ComponentType.COMPONENT_BOX) ||
+				!ECSManager.hasComponent(enemy, ComponentType.COMPONENT_GAMEENTITY) ||
+				ECSManager.hasComponent(enemy, ComponentType.COMPONENT_DEAD))
 				continue;
 				
 			enemyPos = ECSManager.getComponent(enemy, ComponentType.COMPONENT_POSITION).position;

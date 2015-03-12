@@ -4,12 +4,11 @@ var WAVES =
 	"waves":
 	[
 		// First wave..
-		[
+		/*[
 			[
-				"0",
-				"10-orc",
-				"5-werewolf",
-				"20-rogue"
+				"5000",
+				"10-kamikaze",
+				"1-phantom"
 			]
 		],
 		
@@ -18,17 +17,59 @@ var WAVES =
 			[
 				"0",
 				"20-zombie",
-				"10-vampire",
-				
+				"20-kamikaze"
+			]
+		],*/
+		
+		[
+			[
+				"0",
+				"10-ghost",
+				"0-skeleton"
+			]
+		],
+		
+		/*[
+			[
+				"0",
+				"20-kamikaze"
 			]
 		],
 		
 		[
 			[
 				"0",
-				"10-phantom",
-				"40-skeleton"
+				"8-orc",
+				"40-zombie"
 			]
-		]
+		],
+		
+		[
+			[
+				"0",
+				"8-werewolf",
+				"8-kamikaze"
+			]
+		],
+		
+		[
+			[
+				"0",
+				"8-vampire",
+				"8-phantom",
+			],
+			[
+				"0",
+				"20-kamikaze"
+			]
+		],
+		
+		[
+			[
+				"0",
+				"15-rogue",
+				"30-kamikaze"
+			]
+		],*/
 	]
 }

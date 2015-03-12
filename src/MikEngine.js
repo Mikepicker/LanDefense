@@ -10,8 +10,9 @@ var RATIO = null;
 var currentWidth = null;
 var currentHeight = null;
 
-var canvas = document.querySelector("canvas");	// Canvas
-var drawingSurface = canvas.getContext("2d");	// Drawing Surface
+var canvas;	// Canvas
+var drawingSurface;	// Drawing Surface
+
 var canvasPosX, canvasPosY = 0;
 
 var offScreenCanvas = document.createElement("canvas");
@@ -36,7 +37,7 @@ function init()
 	currentWidth = WIDTH;
 	currentHeight = HEIGHT;
 	
-	canvas = document.querySelector("canvas");	// Canvas
+	canvas = document.getElementById("canvas");	// Canvas
 
 	canvas.width = WIDTH;
 	canvas.height = HEIGHT;
@@ -123,7 +124,7 @@ function init()
 	}, false); 
 		
 	// Init Game State
-	ECSManager.changeState(Object.create(MainMenuState));
+	ECSManager.changeState(Object.create(LoadingState));
 
 	// Start Game Loop
 	requestAnimationFrame(update);
@@ -216,9 +217,9 @@ function update(ts)
 	//drawingSurface.drawImage(offScreenCanvas, WIDTH, HEIGHT);
 	
 	// Display FPS
-	drawingSurface.font = 'italic 40pt Calibri';
+	/*drawingSurface.font = 'italic 40pt Calibri';
 	drawingSurface.fillStyle = "black";
-	drawingSurface.fillText(Math.floor(calcFps), 300, 50);
+	drawingSurface.fillText("FPS: " + Math.floor(calcFps), 300, 50);*/
 	
 	requestAnimationFrame(update);
 }

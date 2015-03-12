@@ -5,6 +5,7 @@ var WavesSystem =
 	totalWaves: 0,
 	waveIndex: 0,
 	gameState: null,
+	firstWave: true,
 	
 	init: function()
 	{
@@ -27,6 +28,101 @@ var WavesSystem =
 		if (this.gameState.gamePaused || this.gameState.gameWon)
 			return;
 				
+		this.generateRandomWave();
+		//this.readWaveData(dt);
+		
+		// Increase game time
+		this.gameTime += dt;
+	},
+	
+	generateRandomWave: function()
+	{
+		// Check for wave end
+		if (this.firstWave || this.gameState.enemiesAlive <= 0)
+		{
+			// Next level
+			if (!this.firstWave)
+			{
+				console.log("Wave " + this.gameState.currentWave + " Complete!");
+				this.gameTime = 0;
+				this.gameState.currentWave++;
+			}
+			
+			this.firstWave = false;
+			
+			console.log("Begin wave " + this.gameState.currentWave);
+			
+			// Random number of enemies
+			var min = this.gameState.currentWave;
+			var max = this.gameState.currentWave * 2;
+			var enemies = Math.floor((Math.random() * min) + max);
+			this.gameState.enemiesAlive = enemies;
+			
+			// Spawn random enemies
+			for (var i = 0; i < enemies; i++)
+			{
+				var type = Math.floor(Math.random() * CONFIG.enemies.length);
+				var randomType = CONFIG.enemies[type];
+				var offset = 2000;
+				
+				switch(randomType)
+				{
+					case "rogue": 
+						EntityFactory.createRogue(Math.floor((Math.random() * (offset + 10)) + offset), 
+												  Math.floor((Math.random() * 600) + 1), "enemy");
+						break;
+															
+					case "skeleton":
+						EntityFactory.createSkeleton(Math.floor((Math.random() * (offset + 10)) + offset), 
+													 Math.floor((Math.random() * 600) + 1), "enemy");
+						break;
+						
+					case "vampire":
+						EntityFactory.createVampire(Math.floor((Math.random() * (offset + 10)) + offset), 
+													Math.floor((Math.random() * 600) + 1), "enemy");
+						break;
+						
+					case "phantom":
+						EntityFactory.createPhantom(Math.floor((Math.random() * (offset + 10)) + offset), 
+													Math.floor((Math.random() * 600) + 1), "enemy");
+						break;
+						
+					case "zombie":
+						EntityFactory.createZombie(Math.floor((Math.random() * (offset + 10)) + offset), 
+													Math.floor((Math.random() * 600) + 1), "enemy");
+						break;
+						
+					case "orc":
+						EntityFactory.createOrc(Math.floor((Math.random() * (offset + 10)) + offset), 
+													Math.floor((Math.random() * 600) + 1), "enemy");
+						break;
+						
+					case "werewolf":
+						EntityFactory.createWerewolf(Math.floor((Math.random() * (offset + 10)) + offset), 
+													 Math.floor((Math.random() * 600) + 1), "enemy");
+						break;
+						
+					case "kamikaze":
+						EntityFactory.createKamikaze(Math.floor((Math.random() * (offset + 10)) + offset), 
+													 Math.floor((Math.random() * 600) + 1), "enemy");
+						break;
+						
+					case "shaman":
+						EntityFactory.createShaman(Math.floor((Math.random() * (offset + 10)) + offset), 
+													 Math.floor((Math.random() * 600) + 1), "enemy");
+						break;
+						
+					case "ghost":
+						EntityFactory.createGhost(Math.floor((Math.random() * (offset + 10)) + offset), 
+													 Math.floor((Math.random() * 600) + 1), "enemy");
+						break;
+				}
+			}
+		}
+	},
+	
+	readWaveData: function(dt)
+	{
 		// Read data and spawn monsters
 		var waveData = WAVES.waves[this.gameState.currentWave-1];
 		
@@ -112,14 +208,26 @@ var WavesSystem =
 							
 						case "werewolf":
 							EntityFactory.createWerewolf(Math.floor((Math.random() * 2500) + 2000), 
-														Math.floor((Math.random() * 600) + 1), "enemy");
+														 Math.floor((Math.random() * 600) + 1), "enemy");
 							break;
+							
+						case "kamikaze":
+							EntityFactory.createKamikaze(Math.floor((Math.random() * 2500) + 2000), 
+														 Math.floor((Math.random() * 600) + 1), "enemy");
+							break;
+							
+						case "shaman":
+							EntityFactory.createShaman(Math.floor((Math.random() * (1000 + 20)) + 2000), 
+													 Math.floor((Math.random() * 600) + 1), "enemy");
+						break;
+						
+						case "ghost":
+							EntityFactory.createGhost(Math.floor((Math.random() * (1000 + 20)) + 2000), 
+													 Math.floor((Math.random() * 600) + 1), "enemy");
+						break;
 					}
 				}
 			}
 		}
-		
-		// Increase game time
-		this.gameTime += dt;
 	}
 }

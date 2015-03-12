@@ -19,6 +19,7 @@ var UISystem =
 	displayLevelTimer: 0,
 	
 	reinforcementsButton: null,
+	displayNoMoneyText: false,
 	
 	specialSkillButton: null,
 	
@@ -124,8 +125,6 @@ var UISystem =
 		drawingSurface.font = "18px gothic";
 		drawingSurface.textAlign = "left";
 		drawingSurface.fillStyle = 'rgb(255,255,255)';
-		drawingSurface.strokeStyle = 'black';
-		drawingSurface.lineWidth = 6;
 		
 		drawingSurface.fillText(livesText, 45, 30);
 		drawingSurface.fillText(scoreText, 175, 30);
@@ -169,12 +168,21 @@ var UISystem =
 								 20, 18,
 								 16, 16);
 								 
-		drawingSurface.drawImage(AssetsManager.images["score_icon"],
+		drawingSurface.drawImage(AssetsManager.images["golds_icon"],
 								 0, 0,
 								 16, 16,
 								 150, 18,
 								 16, 16);
-								 
+							
+		// Draw Score
+		drawingSurface.font = "60px gothic";
+		drawingSurface.textAlign = "center";
+		
+		drawingSurface.fillStyle = 'rgb(0,0,0)';
+		drawingSurface.fillText("score: " + this.gameState.score, canvas.width/2, 49);
+		drawingSurface.fillStyle = 'rgb(255,255,255)';
+		drawingSurface.fillText("score: " + this.gameState.score, canvas.width/2, 45);
+		
 		// Check for game ended
 		if (this.gameState.lives === 0)
 		{
@@ -185,63 +193,106 @@ var UISystem =
 			this.endGameBoard.update(dt);
 			this.endGameBoard.draw();
 			
+			var currHighScore = 0;
+			if (localStorage.high_score)
+				currHighScore = parseInt(localStorage.getItem("high_score"));
+			
+			// Store Score (if highest)
+			if (this.gameState.score > currHighScore)
+				localStorage.setItem("high_score", this.gameState.score);
+
 			return;
 		}
+		
+		// UI Focus
+		var focus = false;
 		
 		// Pause Board
 		this.pauseBoard.update(dt);
 		this.pauseBoard.draw();
 		
+		if (this.pauseBoard.resumeButton.clicked)
+			focus = true;
+			
 		if (this.gameState.gamePaused)
 			return;
 		
 		//---------------------------------------//
 		//----------------BUTTONS----------------//
 		//---------------------------------------//
-		var focus = false;
+		
 		
 		//--------------Pause Button-------------//
-		if (this.pauseButton.clicked)
-		{
-			focus = true;
-			this.gameState.gamePaused = !this.gameState.gamePaused;
-		}
-			
 		this.pauseButton.update(dt);
 		this.pauseButton.draw();
+		
+		if (this.pauseButton.selected)
+		{
+			focus = true;
+		}
+		
+		if (this.pauseButton.clicked)
+			this.gameState.gamePaused = !this.gameState.gamePaused;
 		//---------------------------------------//
 		
 		//--------------Skills Button-------------//
 		// Reinforcements
-		if (this.reinforcementsButton.selected)
-		{
-			focus = true;
-			this.handleReinforcementsButton();
-		}
-			
 		this.reinforcementsButton.update(dt);
 		this.reinforcementsButton.draw();
 		
-		// Special Skill
-		if (this.specialSkillButton.selected)
+		if (this.reinforcementsButton.selected)
 		{
-			switch(this.playerClass)
+			focus = true;
+			if (this.gameState.golds < CONFIG.reinforcementCost)
 			{
-				case "warrior":
-					this.handleWarriorSkill();
-					break;
-					
-				case "ranger":
-					this.handleRangerSkill();
-					break;
-					
-				case "wizard":
-					this.handleWizardSkill();
-					break;
+				this.reinforcementsButton.reset();
+				this.displayNoMoneyText = true;
+				var self = this;
+				setTimeout(function() 
+				{ 
+					self.displayNoMoneyText = false; 
+				}, 2000);
 			}
+			else
+				this.handleReinforcementsButton();
 		}
 		
-		this.specialSkillButton.update(dt);
+		// Display No money available text (if button pressed without money)
+		if (this.displayNoMoneyText)
+		{
+			drawingSurface.font = "32px gothic";
+			drawingSurface.textAlign = "left";
+			drawingSurface.fillStyle = 'rgb(0,0,0)';
+			drawingSurface.fillText("Not enough money to call reinforcements! (" + CONFIG.reinforcementCost + " needed)", 202, 602);
+			drawingSurface.fillStyle = 'rgb(255,0,0)';
+			drawingSurface.fillText("Not enough money to call reinforcements! (" + CONFIG.reinforcementCost + " needed)", 200, 600);
+			
+		}
+		
+		// Special Skill
+		if (!ECSManager.hasComponent(this.player, ComponentType.COMPONENT_DEAD))
+		{
+			this.specialSkillButton.update(dt);
+			
+			if (this.specialSkillButton.selected)
+			{
+					
+				switch(this.playerClass)
+				{
+					case "warrior":
+						this.handleWarriorSkill();
+						break;
+						
+					case "ranger":
+						this.handleRangerSkill();
+						break;
+						
+					case "wizard":
+						this.handleWizardSkill();
+						break;
+				}
+			}
+		}
 		this.specialSkillButton.draw();
 		//---------------------------------------//
 		
@@ -308,8 +359,7 @@ var UISystem =
 		SFXSystem.enableColorMask("rgb(0,0,0)", 3000);
 		this.specialSkillButton.selected = false;
 		this.specialSkillButton.active = false;
-		var plGameEntity = ECSManager.getComponent(this.player, ComponentType.COMPONENT_GAMEENTITY);
-		plGameEntity.rangeWeapon = EntityFactory.createFireArrow(CONFIG.fireArrowsDamage);
+		
 		SkillSystem.toMultipleArrowsSkill(this.player);
 	},
 	
@@ -346,6 +396,9 @@ var UISystem =
 	
 	handleGameWon: function(dt)
 	{
+		// Disable Pause button
+		this.pauseButton.visible = false;
+		
 		// Enable fade out (if it's not active yet)
 		if (!SFXSystem.fadeOutEnabled)
 			SFXSystem.enableFadeOut(this.displayLevelTime * 2);

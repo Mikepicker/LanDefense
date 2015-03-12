@@ -82,7 +82,13 @@ var MissileSystem =
 			{
 				if (enemyGE.health <= 0)
 					return;
-					
+				
+				// Play Sound
+				if (missileComp.hitSound !== null)
+				{
+					SoundSystem.playSound(missileComp.hitSound,missileComp.hitSoundVol,1,0);
+				}
+				
 				// Attach Hit Component to enemy
 				if (ECSManager.hasComponent(enemy, ComponentType.COMPONENT_HIT))
 				{
@@ -130,7 +136,11 @@ var MissileSystem =
 	
 	shootMissileToEnemy: function(startX, startY, missile, owner, enemy)
 	{
-		if (!enemy || !missile || !ECSManager.hasComponent(missile, ComponentType.COMPONENT_MISSILE))
+		if (!enemy || !missile || 
+			!ECSManager.hasComponent(missile, ComponentType.COMPONENT_MISSILE) &&
+			!ECSManager.hasComponent(missile, ComponentType.COMPONENT_POSITION) &&
+			!ECSManager.hasComponent(missile, ComponentType.COMPONENT_BOX) &&
+			!ECSManager.hasComponent(missile, ComponentType.COMPONENT_MOTION))
 			return;
 			
 		var missileComp = ECSManager.getComponent(missile, ComponentType.COMPONENT_MISSILE);
@@ -180,6 +190,12 @@ var MissileSystem =
 		ECSManager.attachComponent(missilePos, missile);
 		ECSManager.attachComponent(missileDisp, missile);
 		ECSManager.attachComponent(missileMot, missile);
+		
+		// Play Sound
+		if (missileComp.shotSound !== null)
+		{
+			SoundSystem.playSound(missileComp.shotSound,missileComp.shotSoundVol,1,0);
+		}
 	},
 	
 	copyMissile: function(missile)
@@ -196,6 +212,10 @@ var MissileSystem =
 		missileComp.speed = ECSManager.getComponent(missile, ComponentType.COMPONENT_MISSILE).speed;
 		missileComp.damage = ECSManager.getComponent(missile, ComponentType.COMPONENT_MISSILE).damage;
 		missileComp.img = ECSManager.getComponent(missile, ComponentType.COMPONENT_MISSILE).img;
+		missileComp.shotSound = ECSManager.getComponent(missile, ComponentType.COMPONENT_MISSILE).shotSound;
+		missileComp.hitSound = ECSManager.getComponent(missile, ComponentType.COMPONENT_MISSILE).hitSound;
+		missileComp.shotSoundVol = ECSManager.getComponent(missile, ComponentType.COMPONENT_MISSILE).shotSoundVol;
+		missileComp.hitSoundVol = ECSManager.getComponent(missile, ComponentType.COMPONENT_MISSILE).hitSoundVol;
 		
 		// Box Component
 		var missileBox = Object.create(BoxComponent);

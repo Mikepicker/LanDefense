@@ -60,7 +60,12 @@ var ImageButton =
 				this.clicked = false;
 				
 			if (this.selected)
+			{
 				this.clicked = true;
+				
+				// Play Sound
+				SoundSystem.playSound("button_click",1,1,0);
+			}
 				
 			this.selected = false;
 		}	

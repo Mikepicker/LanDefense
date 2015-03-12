@@ -144,6 +144,13 @@ var SkillButton =
 		}
 		
 		drawingSurface.globalAlpha = 1;
+	},
+	
+	reset: function()
+	{
+		this.cooldownTimer = this.cooldown;
+		this.active = false;
+		this.selected = false;
 	}
 }
 

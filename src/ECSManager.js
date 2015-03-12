@@ -11,6 +11,10 @@ var ECSManager =
 	components: [],		// [Entity][ComponentType]
 	systems: [],
 
+	// Debug
+	removed: 0,
+	created: 0,
+	
 	createEntity: function()
 	{
 		var entity = Object.create(Entity);					// New Entity
@@ -32,6 +36,11 @@ var ECSManager =
 		
 		this.components[entity.ID] = new Array(ComponentType.length)	// Initialize components
 		
+		// Debug
+		this.created++;
+		console.log("Created: " + this.created);
+		console.log("Total: " + (this.created - this.removed));
+		
 		return entity;				// Return new entity
 	},
 
@@ -41,6 +50,11 @@ var ECSManager =
 		this.components[entity.ID] = undefined;
 		this.entityIDPool.push(entity.ID);
 		//console.log("Removing: " + entity.ID);
+		
+		// Debug
+		this.removed++;
+		console.log("Removed: " + this.removed);
+		console.log("Total: " + (this.created - this.removed));
 	},
 
 	attachComponent: function(component, entity)

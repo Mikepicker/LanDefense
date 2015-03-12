@@ -27,9 +27,6 @@ var SFXSystem =
 	
 	init: function() 
 	{
-		SFXSystem.canvasStartingLeft = canvas.style.left;
-		SFXSystem.canvasStartingTop = canvas.style.top;
-		
 		// Get game state
 		for (var i = 0; i < ECSManager.entities.length; i++)
 		{
@@ -84,6 +81,9 @@ var SFXSystem =
 	
 	shakeScreen: function(time, intensity)
 	{
+		SFXSystem.canvasStartingLeft = canvas.style.left;
+		SFXSystem.canvasStartingTop = canvas.style.top;
+		
 		SFXSystem.shakeEnabled = true;
 		SFXSystem.shakeTime = time;
 		SFXSystem.shakeIntensity = intensity;

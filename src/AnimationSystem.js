@@ -24,15 +24,13 @@ var AnimationSystem =
 		{
 			var ent = ECSManager.entities[i];
 			
-			if (this.checkAnimComponents(ent) && !ECSManager.hasComponent(ent, ComponentType.COMPONENT_DEAD))
+			if (this.checkAnimComponents(ent))
 			{
-				var gameEntity = ECSManager.getComponent(ent, ComponentType.COMPONENT_GAMEENTITY);
 				var position = ECSManager.getComponent(ent, ComponentType.COMPONENT_POSITION).position;
-				var motion = ECSManager.getComponent(ent, ComponentType.COMPONENT_MOTION);
 				var box = ECSManager.getComponent(ent, ComponentType.COMPONENT_BOX);
 				var animation = ECSManager.getComponent(ent, ComponentType.COMPONENT_ANIMATION);
 				
-				if (animation.currentAnimation === null)
+				if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_EXPLOSION))
 					console.log("STOP");
 				var totalFrames = animation.currentAnimation.framesCount;
 				var animData = animation.animationData;
@@ -69,7 +67,7 @@ var AnimationSystem =
 	changeAnimation: function(ent, anim, isTriggered)
 	{
 		var animComp = ECSManager.getComponent(ent, ComponentType.COMPONENT_ANIMATION);
-		
+
 		animComp.currentAnimation = anim;
 		animComp.currentFrame = 0;
 		animComp.timer = 0;
@@ -78,10 +76,9 @@ var AnimationSystem =
 	
 	checkAnimComponents: function(ent)
 	{
-		return  ECSManager.hasComponent(ent, ComponentType.COMPONENT_GAMEENTITY) &&
-				ECSManager.hasComponent(ent, ComponentType.COMPONENT_ANIMATION) &&
+		return 	(ECSManager.hasComponent(ent, ComponentType.COMPONENT_EXPLOSION) ||
+				(ECSManager.hasComponent(ent, ComponentType.COMPONENT_GAMEENTITY) && !ECSManager.hasComponent(ent, ComponentType.COMPONENT_DEAD))) &&
 				ECSManager.hasComponent(ent, ComponentType.COMPONENT_POSITION) &&
-				ECSManager.hasComponent(ent, ComponentType.COMPONENT_MOTION) &&
 				ECSManager.hasComponent(ent, ComponentType.COMPONENT_BOX) &&
 				ECSManager.hasComponent(ent, ComponentType.COMPONENT_DISPLAY);
 	}

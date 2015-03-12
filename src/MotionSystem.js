@@ -85,6 +85,9 @@ var MotionSystem =
 		{
 			motion.velocity.set(0,0);
 			ECSManager.detachComponent(ComponentType.COMPONENT_IMPULSE, ent);
+			
+			if (ECSManager.hasComponent(ent, ComponentType.COMPONENT_KEYBOARD))
+				ECSManager.attachComponent(Object.create(KeyboardActiveComponent), ent);
 		}
 		else
 			motion.velocity.mulScalar(1/damping);

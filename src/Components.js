@@ -6,68 +6,76 @@ var ComponentType =
 	COMPONENT_DISPLAY:			2,
 	COMPONENT_ANIMATION:		3,
 	COMPONENT_KEYBOARD:			4,
+	COMPONENT_KEYBOARDACTIVE:   5,
 	
-	COMPONENT_MAP:				5,
-	COMPONENT_MOTION:			6,
-	COMPONENT_PLAYER:			7,
-	COMPONENT_CAMERA:			8,
-	COMPONENT_COLLISION:		9,
-	COMPONENT_GAMEENTITY:		10,
+	COMPONENT_MAP:				6,
+	COMPONENT_MOTION:			7,
+	COMPONENT_PLAYER:			8,
+	COMPONENT_CAMERA:			9,
+	COMPONENT_COLLISION:		10,
+	COMPONENT_GAMEENTITY:		11,
 	
 	// Behaviors
-	COMPONENT_MELEEATTACKER:	11,
-	COMPONENT_MELEEATTACKED:	12,
-	COMPONENT_RANGEATTACKER:	13,
-	COMPONENT_MOVETOLOCATION:	14,
-	COMPONENT_SEEKENTITY:		15,
+	COMPONENT_MELEEATTACKER:	12,
+	COMPONENT_MELEEATTACKED:	13,
+	COMPONENT_RANGEATTACKER:	14,
+	COMPONENT_MOVETOLOCATION:	15,
+	COMPONENT_SEEKENTITY:		16,
 	
 	// AI Behaviors
-	COMPONENT_STANDARDENEMYAI:	16,
-	COMPONENT_REINFORCEMENTAI:	17,
-	COMPONENT_AGGRESSIVEAI:		18,
-	COMPONENT_ELUSIVEAI:		19,
+	COMPONENT_STANDARDENEMYAI:	17,
+	COMPONENT_REINFORCEMENTAI:	18,
+	COMPONENT_AGGRESSIVEAI:		19,
+	COMPONENT_ELUSIVEAI:		20,
 	
 	// Weapons
-	COMPONENT_WEAPON:			20,
-	COMPONENT_MISSILE:			21,
+	COMPONENT_WEAPON:			21,
+	COMPONENT_MISSILE:			22,
 	
-	COMPONENT_GAMESTATE:		22,
-	COMPONENT_RESPAWN:			23,
+	COMPONENT_GAMESTATE:		23,
+	COMPONENT_RESPAWN:			24,
 	
 	// Factions
-	COMPONENT_ALLIED:			24,
-	COMPONENT_ENEMY:			25,
+	COMPONENT_ALLIED:			25,
+	COMPONENT_ENEMY:			26,
 	
-	COMPONENT_REINFORCEMENT:	26,
+	COMPONENT_REINFORCEMENT:	27,
 	
 	// Damage System
-	COMPONENT_DEAD:				27,
-	COMPONENT_HIT:				28,
+	COMPONENT_DEAD:				28,
+	COMPONENT_HIT:				29,
 	
 	// Red cross (Movement..)
-	COMPONENT_REDCROSS:			29,
+	COMPONENT_REDCROSS:			30,
 	
 	// Skills
-	COMPONENT_EARTHSTRIKE:		30,
-	COMPONENT_MULTIPLEARROWS:	31,
-	COMPONENT_FROZENRAIN:		32,
+	COMPONENT_EARTHSTRIKE:		31,
+	COMPONENT_MULTIPLEARROWS:	32,
+	COMPONENT_FROZENRAIN:		33,
 	
 	// Special skills effects
-	COMPONENT_IMPULSE:			33,
-	COMPONENT_FROZEN:			34,
-	COMPONENT_BURN:				35,
+	COMPONENT_IMPULSE:			34,
+	COMPONENT_FROZEN:			35,
+	COMPONENT_BURN:				36,
 	
 	// Passive abilities
-	COMPONENT_LIFESTEALING:		36,
-	COMPONENT_VIRUST:			37,
+	COMPONENT_LIFESTEALING:		37,
+	COMPONENT_VIRUST:			38,
+	COMPONENT_INVULNERABLE:		39,
+	COMPONENT_KAMIKAZE:			40,
+	COMPONENT_REGENERATION:		41,
 	
 	// Scene object
-	COMPONENT_SCENEOBJECT:		38,
+	COMPONENT_SCENEOBJECT:		42,
+	
+	// Explosion
+	COMPONENT_EXPLOSION:		43,
 	
 	// Bonuses
-	COMPONENT_LIFEBONUS:		39,
-	COMPONENT_GOLDBONUS:		40,
-	COMPONENT_GOLDSCORE:		41
+	COMPONENT_LIFEBONUS:		44,
+	COMPONENT_GOLDBONUS:		45,
+	COMPONENT_GOLDSCORE:		46,
+	COMPONENT_HEALPOTION:		47
 };
 
 var PositionComponent =
@@ -114,12 +122,17 @@ var KeyboardComponent =
 	pauseKey: 0,
 };
 
+var KeyboardActiveComponent =
+{
+	type: ComponentType.COMPONENT_KEYBOARDACTIVE
+};
+
 var MapComponent =
 {
 	type: ComponentType.COMPONENT_MAP,
 	
 	tileSize: 0,
-	tileSets: {},	// Tile Sets
+	tileSets: {},		// Tile Sets
 	tiles: {},		// Tiles
 	mapCanvas: null,	// Drawing surface for map and entities
 };
@@ -135,8 +148,6 @@ var PlayerComponent =
 {
 	type: ComponentType.COMPONENT_PLAYER,
 	class: null,	// "warrior", "ranger", "wizard"
-	regenTime: 1000,
-	regenTimer: 0
 };
 
 var CameraComponent =
@@ -271,7 +282,13 @@ var MissileComponent =
 	time: 0,
 	decayTime: 3000,		// Seconds to disappear after hitting the ground
 	decayTimer: 0,
-	owner:	null		// Entity who own shot this missile
+	owner:	null,			// Entity who own shot this missile
+	
+	shotSound: null,
+	shotSoundVol: 0,
+	
+	hitSound: null,
+	hitSoundVol: 0
 };
 
 // GAME STATE
@@ -286,7 +303,8 @@ var GameStateComponent =
 	golds: 0,
 	selectedEntity: null,
 	enemiesAlive: 0,
-	currentWave: 1
+	currentWave: 1,
+	score: 0
 };
 
 var RespawnComponent =
@@ -401,12 +419,41 @@ var VirusTComponent =
 	type: ComponentType.COMPONENT_VIRUST
 };
 
+var InvulnerableComponent =
+{
+	type: ComponentType.COMPONENT_INVULNERABLE,
+	
+	timer: 0,
+	time: 0
+};
+
+var KamikazeComponent =
+{
+	type: ComponentType.COMPONENT_KAMIKAZE,
+	
+	explosionRange: 0
+};
+
+var RegenerationComponent =
+{
+	type: ComponentType.COMPONENT_REGENERATION,
+	regenRate: 0,
+	regenTimer: 0,
+	regenTime: 0
+}
+
 // Scene object (icedrops..)
 var SceneObjectComponent =
 {
 	type: ComponentType.COMPONENT_SCENEOBJECT,
 	
 	img: null
+};
+
+// Explosion
+var ExplosionComponent =
+{
+	type: ComponentType.COMPONENT_EXPLOSION
 };
 
 // Bonuses
@@ -419,6 +466,12 @@ var LifeBonusComponent =
 var GoldBonusComponent =
 {
 	type: ComponentType.COMPONENT_GOLDBONUS,
+	img: null
+};
+
+var HealPotionComponent =
+{
+	type: ComponentType.COMPONENT_HEALPOTION,
 	img: null
 };
 
